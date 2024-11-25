@@ -1,0 +1,152 @@
+serialport='/C=3'
+;fileopen file filename 1
+;filewriteln file filename
+connect serialport
+setbaud 115200
+;timeout=1
+setsync 1
+pause 1
+setecho 1
+waitln 'Grbl'
+waitln 'ok'
+sendln '$1=255'
+waitln 'ok' '[MSG:Chec'
+if result =2 sendln '$X'             
+		;messagebox result 'error'
+	
+
+sendln '$21=0'
+waitln 'ok' '[MSG:Chec'
+if result =2 sendln '$X'             
+		;messagebox result 'error'
+	
+
+sendln'G10 P0 L20 X0 Y0 Z0'
+waitln 'ok'
+;sendln '$G'
+;waitln 'ok' 
+
+sendln 'G1 G21 F300'
+waitln 'ok'
+sendln ' G90 x-2.5'
+waitln 'ok'
+:start	 
+ ; messagebox  'Place the ball' 'START'    
+ ;call weld		  		 	                     	   
+;goto start
+          
+		  ;call dropball
+          call getball
+          ;pause 1
+           ;messagebox  'Press ok to start' 'START'
+		     
+		  sendln ' G90 x0'
+          waitln 'ok'
+		  call Move		  	     
+		  
+		  call Weld 
+		  	     
+		  sendln ' G90 x-3.45'
+          waitln 'ok'
+		  call Move
+	      mpause 500
+		  	      
+		    
+		  sendln ' G90 x-2.5'
+          waitln 'ok'
+		  call Move
+		  		 	                     	   
+goto start
+	   
+:Move         
+              
+    flushrecv
+  do  
+    flushrecv
+    
+    send'?'
+;    pause 1
+    recvln
+    ;messagebox inputstr 'Move fun'
+    strscan inputstr '<Run'  ; scans inputstr and stores position on result ; result = 0 if it's not founs 
+	;messagebox result 'result' 
+  loop while result    
+    strscan inputstr '<Idle'  ; scans inputstr and stores position on result ; result = 0 if it's not founs
+	if result =0 messagebox inputstr 'error'
+   
+ return
+ 
+:Weld
+		   
+        flushrecv		
+		call Wait_welding_switch_on	       
+		sendln'M4'
+		waitln 'ok'
+       ; messagebox 'started' 'welding'
+			
+		call Wait_welding_switch_off
+		call Wait_welding_switch_on	  				
+		sendln'M3'
+		waitln 'ok'
+			   
+    ; messagebox 'ended' 'welding'
+
+return
+
+:getball
+
+	flushrecv
+    do 
+    flushrecv
+     mpause 50
+     ;messagebox 'Loop' 'Swich On'
+	     send '?'
+	     recvln
+;	     strscan inputstr 'Pn:XY'  
+	     strscan inputstr 'Pn:XYZ'  
+ loop while result=0
+ ;messagebox 'result' 'out of loop'
+
+return
+:dropball
+    flushrecv
+    do 
+    flushrecv
+     ;messagebox 'Loop' 'Swich Off'
+     mpause 500
+     send '?'
+     recvln
+     strscan inputstr 'Y' 	 	  
+    loop while result 
+ ;messagebox 'result' inputstr	     
+return
+:Wait_welding_switch_on
+     
+    flushrecv
+    do 
+     ;messagebox 'Loop' 'Swich On'
+     mpause 200
+     send '?'
+     recvln
+;     strscan inputstr 'Pn:X' 	 	  
+     strscan inputstr 'Z' 	 	  
+    loop while result=0 
+ ;messagebox 'result' 'out of loop'    
+
+return
+
+:Wait_welding_switch_off
+
+     
+    flushrecv
+    do 
+     ;messagebox 'Loop' 'Swich On'
+     mpause 200
+     send '?'
+     recvln
+;     strscan inputstr 'Pn:X' 	 	  
+     strscan inputstr 'Z' 	 	  
+    loop while result 
+ ;messagebox 'result' 'out of loop'    
+
+return
