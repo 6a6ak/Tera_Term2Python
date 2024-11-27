@@ -4,9 +4,10 @@ import time
 # Configuration variables
 port = 'COM25'  # Replace with your Arduino's port
 baud_rate = 115200  # GRBL's default baud rate
-feed_rate = 100  # Movement speed in mm/min
-one_turn_distance = 16  # Distance in mm for one full motor turn (adjust as per your setup)
+feed_rate = 60  # Movement speed in mm/min
+step_distance = 16  # Distance for each movement (in mm)
 debounce_time = 0.2  # Debounce delay in seconds
+default_steps_per_mm = 1000  # Default $100 value (Steps per mm for X-axis)
 
 # Initialize the serial connection
 try:
@@ -30,6 +31,9 @@ def send_gcode(command):
             if response == 'ok':
                 print(f"Response: {response}")
                 break
+            elif response.startswith('error'):
+                print(f"Error: {response}")
+                break
     else:
         print("Serial connection is not open.")
 
@@ -48,6 +52,7 @@ def get_button_state():
 try:
     # Unlock GRBL and configure settings
     send_gcode('$X')  # Unlock the controller
+    send_gcode(f'$100={default_steps_per_mm}')  # Set default steps per mm for X-axis
     send_gcode('G21')  # Set units to millimeters
     send_gcode('G91')  # Set to relative positioning mode
 
@@ -58,14 +63,12 @@ try:
 
         if 'Y' in button_state:  # Y+ button pressed
             print("Y+ Button pressed!")
-            send_gcode(f'G1 X{one_turn_distance} F{feed_rate}')  # Move +X for one turn
-            print(f"Moving motor by {one_turn_distance} mm with feed rate {feed_rate}.")
+            send_gcode(f'G1 X{step_distance} F{feed_rate}')  # Move +X by 1 mm
             time.sleep(debounce_time)  # Debounce delay
 
         elif 'Z' in button_state:  # Z+ button pressed
             print("Z+ Button pressed!")
-            send_gcode(f'G1 X-{one_turn_distance} F{feed_rate}')  # Move -X for one turn
-            print(f"Moving motor by -{one_turn_distance} mm with feed rate {feed_rate}.")
+            send_gcode(f'G1 X-{step_distance} F{feed_rate}')  # Move -X by 1 mm
             time.sleep(debounce_time)  # Debounce delay
 
 except KeyboardInterrupt:

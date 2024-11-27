@@ -94,3 +94,4 @@ finally:
         serial_connection.close()
     GPIO.cleanup()
     print("Connection closed.")
+
