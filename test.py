@@ -1,6 +1,7 @@
+from tkinter import Button
 import serial
 import time
-
+import RPi.GPIO as GPIO
 # Configuration variables
 port = 'COM25'  # Replace with your GRBL device port
 baud_rate = 115200  # GRBL's default baud rate
@@ -61,4 +62,35 @@ except KeyboardInterrupt:
 finally:
     if serial_connection.isOpen():
         serial_connection.close()
+    print("Connection closed.")
+
+
+# Initialize GPIO
+Button_z_pin = 2
+Button_y_pin = 3
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(Button_z_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(Button_y_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+try:
+    while True:
+        # Check button states
+        if GPIO.input(Button_z_pin) == GPIO.LOW:
+            send_gcode_command('G91')  # Set to relative positioning
+            send_gcode_command('G0 Z10')  # Move Z-axis up by 10 mm
+            send_gcode_command('G90')  # Set back to absolute positioning
+            time.sleep(0.2)  # Debounce delay
+
+        if GPIO.input(Button_y_pin) == GPIO.LOW:
+            send_gcode_command('G91')  # Set to relative positioning
+            send_gcode_command('G0 Y10')  # Move Y-axis up by 10 mm
+            send_gcode_command('G90')  # Set back to absolute positioning
+            time.sleep(0.2)  # Debounce delay
+
+except KeyboardInterrupt:
+    print("Program interrupted by user.")
+finally:
+    if serial_connection.isOpen():
+        serial_connection.close()
+    GPIO.cleanup()
     print("Connection closed.")
