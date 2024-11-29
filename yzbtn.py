@@ -4,10 +4,11 @@ import time
 # Configuration variables
 port = 'COM25'  # Replace with your Arduino's port
 baud_rate = 115200  # GRBL's default baud rate
-feed_rate = 60  # Movement speed in mm/min
-step_distance = 16  # Distance for each movement (in mm)
+feed_rate = 50  # Movement speed in mm/min for smooth movement
+step_distance = 0.01  # Very small distance for smoother movement
 debounce_time = 0.2  # Debounce delay in seconds
-default_steps_per_mm = 1000  # Default $100 value (Steps per mm for X-axis)
+default_steps_per_mm = 1600  # Default $100 value (Steps per mm for X-axis)
+default_acceleration = 150  # Very low acceleration for smooth motion
 
 # Initialize the serial connection
 try:
@@ -40,7 +41,7 @@ def send_gcode(command):
 # Function to check button state from GRBL status
 def get_button_state():
     if serial_connection.isOpen():
-        serial_connection.write(b'?\n')  # Request GRBL status
+        serial_connection.write(b'?')  # Request GRBL status
         status_response = serial_connection.readline().decode().strip()
         if 'Pn:' in status_response:
             pin_status = status_response.split('|')
@@ -53,6 +54,7 @@ try:
     # Unlock GRBL and configure settings
     send_gcode('$X')  # Unlock the controller
     send_gcode(f'$100={default_steps_per_mm}')  # Set default steps per mm for X-axis
+    send_gcode(f'$120={default_acceleration}')  # Set smooth acceleration for X-axis
     send_gcode('G21')  # Set units to millimeters
     send_gcode('G91')  # Set to relative positioning mode
 
@@ -60,15 +62,14 @@ try:
 
     while True:
         button_state = get_button_state()
-
         if 'Y' in button_state:  # Y+ button pressed
             print("Y+ Button pressed!")
-            send_gcode(f'G1 X{step_distance} F{feed_rate}')  # Move +X by 1 mm
+            send_gcode(f'G1 X{step_distance} F{feed_rate}')  # Move +X by small distance
             time.sleep(debounce_time)  # Debounce delay
 
         elif 'Z' in button_state:  # Z+ button pressed
             print("Z+ Button pressed!")
-            send_gcode(f'G1 X-{step_distance} F{feed_rate}')  # Move -X by 1 mm
+            send_gcode(f'G1 X-{step_distance} F{feed_rate}')  # Move -X by small distance
             time.sleep(debounce_time)  # Debounce delay
 
 except KeyboardInterrupt:
