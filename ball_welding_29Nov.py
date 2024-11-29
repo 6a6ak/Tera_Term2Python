@@ -2,7 +2,7 @@ import serial
 import time
 
 # Function to connect to the serial port
-def connect_serial(port="COM3", baudrate=115200, timeout=1):
+def connect_serial(port="COM25", baudrate=115200, timeout=1):
     try:
         ser = serial.Serial(port, baudrate, timeout=timeout)
         ser.flushInput()
@@ -150,7 +150,7 @@ def hold_motor_position(ser, position):
 
 # Main function
 def main():
-    ser = connect_serial(port="COM3")
+    ser = connect_serial(port="COM25")
     if not ser:
         return
 
@@ -187,7 +187,7 @@ def main():
         send_command(ser, "G90 X-3.25\n", "ok")
         move(ser)
         time.sleep(0.5)
-        get_ball(ser)
+        
 
         send_command(ser, "G90 X-2.5\n", "ok")
         move(ser)
